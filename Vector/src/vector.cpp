@@ -69,8 +69,10 @@ template<typename T>
 vector<T>::vector(vector<T>&& other) {
     this->max_size = other.max_size;
     this->current_size = other.current_size;
-    this->list = other->list;
-    other->list = NULL;
+    other.max_size = 1;
+    other.current_size = 0;
+    this->list = other.list;
+    other.list = new T[1];
 }
 
 template<typename T>
@@ -79,10 +81,12 @@ vector<T>& vector<T>::operator = (vector<T>&& other) {
 
         this->max_size = other.max_size;
         this->current_size = other.current_size;
+        other.max_size = 1;
+        other.current_size = 0;
 
         if (this->list != NULL) delete[] this->list;
-        this->list = other->list;
-        other->list = NULL;
+        this->list = other.list;
+        other.list = new T[1];
 
     }
     return *this;
