@@ -73,3 +73,15 @@ TYPED_TEST(MyFixture, VectorOfVectors) {
   EXPECT_EQ(vv_cons.size(), 5);
 
 }
+
+TEST(RegularTest, MoveAssignment) {
+  vector<Test_Type> vec;
+  Test_Type a, b, c, d, e, f;
+  vec.push_back(a);
+  vec.push_back(b);
+  vec.push_back(c);
+  vec.push_back(d);
+  vec.push_back(e);
+  vec.push_back(f);
+  EXPECT_EQ(Test_Type::counter, 13);
+}

@@ -94,7 +94,7 @@ vector<T>& vector<T>::operator = (vector<T>&& other) {
 
 template<typename T>
 void vector<T>::push_back(T new_element) {
-    list[current_size] = new_element;
+    list[current_size] = std::move(new_element);
     current_size++;
     update_size(current_size);
 }
@@ -144,7 +144,7 @@ void vector<T>::update_size(int new_size) {
         }
         T* new_list = new T[max_size];
         for (int i = 0; i < current_size; i++) {
-            new_list[i] = list[i];
+            new_list[i] = std::move(list[i]);
         }
         delete[] list;
         list = new_list;
@@ -156,12 +156,27 @@ void vector<T>::update_size(int new_size) {
         max_size = max_size == 0 ? 1 : max_size;
         T* new_list = new T[max_size];
         for (int i = 0; i < new_size; i++) {
-            new_list[i] = list[i];
+            new_list[i] = std::move(list[i]);
         }
         delete[] list;
         list = new_list;
     }
     current_size = new_size;
 }
+
+class Test_Type {
+public:
+    Test_Type() {}
+    ~Test_Type() {}
+    Test_Type(const Test_Type& other) {}
+    Test_Type& operator = (const Test_Type& other) {return *this;}
+    Test_Type(Test_Type&& other) {}
+    Test_Type& operator = (Test_Type&& other) {
+        counter++;
+        return *this;
+    }
+    static int counter;
+};
+int Test_Type::counter = 0;
 
 #endif
