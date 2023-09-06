@@ -1,13 +1,13 @@
 ﻿
 enable_testing()
 
-add_executable(SahredPointerTEST SahredPointerTest.cpp)
-target_link_libraries(SahredPointerTEST
+add_executable(SharedPointerTEST SharedPointerTest.cpp)
+target_link_libraries(SharedPointerTEST
   gtest gtest_main gcov
 )
 
 add_test(mytest
-  SahredPointerTEST
+  SharedPointerTEST
 )
 
 SET(GCC_COVERAGE_COMPILE_FLAGS "-g -O0 -coverage -fprofile-arcs -ftest-coverage")

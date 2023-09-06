@@ -1,6 +1,8 @@
 
 #include "gtest/gtest.h"
 #include "shared_ptr.cpp"
+#include <vector>
+#include <thread>
 
 template <typename T>
 class MyFixture : public testing::Test {};
@@ -55,5 +57,29 @@ TEST(RegularTest, Test_Type) {
   }
 
   EXPECT_EQ(Test_Type::deleted, true);
+
+}
+
+TEST(RegularTest, ThreadsTest) {
+
+  shared_ptr<int> ptr(new int);
+
+  auto func = [&ptr] () {
+    shared_ptr<int> p1(ptr);
+    {
+      shared_ptr<int> p2(ptr);
+    }
+  };
+
+  std::vector<std::thread> pool;
+  for(int i = 0; i < 1000; i++) {
+    std::thread th(func);
+    pool.push_back(std::move(th));
+  } 
+  for(int i = 0; i < 1000; i++) {
+    (pool[i]).join();
+  } 
+
+  EXPECT_EQ(ptr.use_count(), 1);
 
 }

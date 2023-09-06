@@ -10,6 +10,7 @@ public:
 };
 bool Test_Type::deleted = false;
 
+
 class reference_counter {
 public:
     reference_counter() : counter(0) {}
@@ -17,7 +18,7 @@ public:
     void decrease() { counter--; }
     int get_counter() { return counter; }
 private:
-    int counter;
+    std::atomic<int> counter;
 };
 
 template <typename T>
