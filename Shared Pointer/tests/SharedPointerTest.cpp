@@ -39,8 +39,9 @@ TEST(RegularTest, ChangeValue) {
   EXPECT_EQ(*(ptr2.get()), 5);
   EXPECT_EQ(*(ptr3.get()), 5);
 
-  *(ptr1.get()) = 9;
+  *ptr1 = 9;
 
+  EXPECT_EQ(*a, 9);
   EXPECT_EQ(*(ptr1.get()), 9);
   EXPECT_EQ(*(ptr2.get()), 9);
   EXPECT_EQ(*(ptr3.get()), 9);

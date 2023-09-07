@@ -10,7 +10,6 @@ public:
 };
 bool Test_Type::deleted = false;
 
-
 class reference_counter {
 public:
     reference_counter() : counter(0) {}
@@ -34,6 +33,8 @@ public:
 
     T* get();
     int use_count();
+    T* operator -> ();
+    T& operator * ();
 
 private:
 
@@ -106,6 +107,16 @@ T* shared_ptr<T>::get() {
 template<typename T>
 int shared_ptr<T>::use_count() {
     return counter->get_counter();
+}
+
+template<typename T>
+T* shared_ptr<T>::operator -> () {
+    return ptr;
+}
+    
+template<typename T>
+T& shared_ptr<T>::operator * () {
+    return *ptr;
 }
 
 #endif
