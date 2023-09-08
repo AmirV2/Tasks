@@ -3,12 +3,11 @@
 #include "PcapLiveDeviceList.h"
 #include "SystemUtils.h"
 
-bool onPacketArrivesBlockingMode(pcpp::RawPacket* packet, pcpp::PcapLiveDevice* dev, void* cookie) {
+void onPacketArrives(pcpp::RawPacket* packet, pcpp::PcapLiveDevice* dev, void* cookie) {
   pcpp::PcapLiveDevice* other = (pcpp::PcapLiveDevice*)cookie;
   if (!other->sendPacket(*packet)) {
     std::cout << "Couldn't send packet!" << std::endl;
   }
-  return true;
 }
 
 int main(int argc, char* argv[]) {
@@ -37,10 +36,14 @@ int main(int argc, char* argv[]) {
     return 1; 
   }
 
-  while (true) {
-    dev_1->startCaptureBlockingMode(onPacketArrivesBlockingMode, dev_2, 10);
-    dev_2->startCaptureBlockingMode(onPacketArrivesBlockingMode, dev_1, 10);
-  }
+  dev_1->startCapture(onPacketArrives, dev_2);
+  dev_2->startCapture(onPacketArrives, dev_1);
+  
+  
+  pcpp::multiPlatformSleep(10);
+
+  dev_1->stopCapture();
+  dev_2->stopCapture();
 
   return 0;
 
