@@ -7,7 +7,9 @@
 #    PcapPlusPlus::Pcap++
 #)
 
-add_executable(main main_libpcap.cpp)
+#add_executable(main main_libpcap.cpp)
+
+add_executable(main main_wire.cpp)
 
 target_link_libraries(main
     pcap
