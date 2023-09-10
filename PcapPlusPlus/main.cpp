@@ -5,13 +5,11 @@
 
 void onPacketArrives(pcpp::RawPacket* packet, pcpp::PcapLiveDevice* dev, void* cookie) {
   pcpp::PcapLiveDevice* other = (pcpp::PcapLiveDevice*)cookie;
-  if (!other->sendPacket(*packet)) {
-    std::cout << "Couldn't send packet!" << std::endl;
-  }
+  other->sendPacket(*packet);
 }
 
 int main(int argc, char* argv[]) {
-  
+
   std::string interface_name_1 = argv[1];
   std::string interface_name_2 = argv[2];
   
@@ -28,19 +26,18 @@ int main(int argc, char* argv[]) {
   }
   
   if (!dev_1->open()) {
-    std::cout << "Could not open the dev_1!" << std::endl;
+    std::cout << "Could not open dev_1!" << std::endl;
     return 1; 
   }
   if (!dev_2->open()) {
-    std::cout << "Could not open the dev_2!" << std::endl;
+    std::cout << "Could not open dev_2!" << std::endl;
     return 1; 
   }
 
   dev_1->startCapture(onPacketArrives, dev_2);
   dev_2->startCapture(onPacketArrives, dev_1);
   
-  
-  pcpp::multiPlatformSleep(10);
+  while(true){}
 
   dev_1->stopCapture();
   dev_2->stopCapture();
