@@ -1,16 +1,8 @@
 
-#add_executable(main main.cpp)
+find_package(PcapPlusPlus CONFIG REQUIRED)
 
-#find_package(PcapPlusPlus CONFIG REQUIRED)
-
-#target_link_libraries(main
-#    PcapPlusPlus::Pcap++
-#)
-
-#add_executable(main main_libpcap.cpp)
-
-add_executable(main main_wire.cpp)
+add_executable(main main_machine.cpp)
 
 target_link_libraries(main
-    pcap
+    pcap PcapPlusPlus::Pcap++
 )

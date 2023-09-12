@@ -3,9 +3,11 @@
 #include "PcapLiveDeviceList.h"
 #include "SystemUtils.h"
 
-void onPacketArrives(pcpp::RawPacket* packet, pcpp::PcapLiveDevice* dev, void* cookie) {
+static void onPacketArrives(pcpp::RawPacket* packet, pcpp::PcapLiveDevice* dev, void* cookie) {
   pcpp::PcapLiveDevice* other = (pcpp::PcapLiveDevice*)cookie;
-  other->sendPacket(*packet);
+  if (!other->sendPacket(*packet)) {
+    std::cerr << "Couldn't send packet." << std::endl;
+  }
 }
 
 int main(int argc, char* argv[]) {
@@ -15,22 +17,23 @@ int main(int argc, char* argv[]) {
   
   pcpp::PcapLiveDevice* dev_1 = pcpp::PcapLiveDeviceList::getInstance().getPcapLiveDeviceByName(interface_name_1);
   pcpp::PcapLiveDevice* dev_2 = pcpp::PcapLiveDeviceList::getInstance().getPcapLiveDeviceByName(interface_name_2);
-  
+
+
   if (dev_1 == NULL) {
-    std::cout << "Could not find interface 1!" << std::endl;
+    std::cerr << "Could not find interface 1!" << std::endl;
     return 1;
   }
   if (dev_2 == NULL) {
-    std::cout << "Could not find interface 2!" << std::endl;
+    std::cerr << "Could not find interface 2!" << std::endl;
     return 1;
   }
   
   if (!dev_1->open()) {
-    std::cout << "Could not open dev_1!" << std::endl;
+    std::cerr << "Could not open dev_1!" << std::endl;
     return 1; 
   }
   if (!dev_2->open()) {
-    std::cout << "Could not open dev_2!" << std::endl;
+    std::cerr << "Could not open dev_2!" << std::endl;
     return 1; 
   }
 
