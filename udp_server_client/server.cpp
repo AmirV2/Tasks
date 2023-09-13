@@ -5,6 +5,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <thread>
 
 #define PORT 8080
 
@@ -15,36 +16,37 @@ int main() {
         std::cout << "Socket creation failed!" << std::endl;
         return 1;
     }
-    else {
-        std::cout << "Socket created." << std::endl;
-    }
+    std::cout << "Socket created." << std::endl;
 
     struct sockaddr_in server_addresss, client_address;
     server_addresss.sin_family = AF_INET;
     server_addresss.sin_port = htons(PORT);
-    server_addresss.sin_addr.s_addr = inet_addr("127.0.0.1");
+    server_addresss.sin_addr.s_addr = inet_addr("10.0.0.3");
 
-    bind(udp_socket, (struct sockaddr*)&server_addresss,
+    int bind_response = bind(udp_socket, (struct sockaddr*)&server_addresss,
         sizeof(server_addresss));
+    if (bind_response < 0) {
+        std::cout << "Bind failed!" << std::endl;
+        return 1;
+    }
     std::cout << "Socket binded." << std::endl;
-
-    std::cout << "Listening..." << std::endl;
-    listen(udp_socket, 1);
-
-    socklen_t client_address_len = sizeof(client_address);
-    int client_socket = accept(udp_socket, (struct sockaddr*)&client_address,
-        &client_address_len);
-    std::cout << "Client accepted." << std::endl;
 
     char buffer[1024] = {0};
     while (true) {
+
+        socklen_t len = sizeof(client_address);
+
         std::cout << "Reading..." << std::endl;
-        read(client_socket, buffer, sizeof(buffer));
+        int n = recvfrom(udp_socket, buffer, 1024, MSG_WAITALL,
+            (struct sockaddr*)&client_address, &len);
+        buffer[n] = '\0';
+
         std::cout << "Sending..." << std::endl;
-        send(client_socket, buffer, strlen(buffer), 0);
+        sendto(udp_socket, buffer, strlen(buffer), MSG_CONFIRM,
+            (struct sockaddr*)&client_address, len);
+
     }
 
-    close(client_socket);
     close(udp_socket);
 
     return 0;

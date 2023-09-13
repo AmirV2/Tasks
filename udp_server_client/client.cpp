@@ -10,8 +10,8 @@
 
 int main() {
 
-    int client_socket = socket(AF_INET, SOCK_DGRAM, 0);
-    if (client_socket < 0) {
+    int server_socket = socket(AF_INET, SOCK_DGRAM, 0);
+    if (server_socket < 0) {
         std::cout << "Socket creation failed!" << std::endl;
         return 1;
     }
@@ -22,25 +22,25 @@ int main() {
     struct sockaddr_in server_addresss;
     server_addresss.sin_family = AF_INET;
     server_addresss.sin_port = htons(PORT);
-    server_addresss.sin_addr.s_addr = inet_addr("127.0.0.1");
+    server_addresss.sin_addr.s_addr = inet_addr("10.0.0.5");
 
-    connect(client_socket, (struct sockaddr*)&server_addresss,
-        sizeof(server_addresss));
-    std::cout << "Connected to server." << std::endl;
-
-    char message[1024] = {0};
+    char message[1024] = "hello!";
     char buffer[1024] = {0};
     while (true) {
-        std::cout << "Message: ";
-        std::cin >> message;
-        std::cout << "Sending..." << std::endl;
-        send(client_socket, message, strlen(message), 0);
-        std::cout << "Reading..." << std::endl;
-        read(client_socket, buffer, sizeof(buffer));
+
+        socklen_t len = sizeof(server_addresss);
+
+        sendto(server_socket, message, strlen(message), MSG_CONFIRM,
+            (struct sockaddr*)&server_addresss, len);
+
+        int n = recvfrom(server_socket, buffer, 1024, MSG_WAITALL,
+            (struct sockaddr*)&server_addresss, &len);
+        buffer[n] = '\0';
         std::cout << buffer << std::endl;
+
     }
 
-    close(client_socket);
+    close(server_socket);
 
     return true;
 

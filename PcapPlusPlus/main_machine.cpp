@@ -9,6 +9,7 @@
 #include "IPv4Layer.h"
 #include "IcmpLayer.h"
 #include "UdpLayer.h"
+#include "PayloadLayer.h"
 
 class Machine {
 public:
@@ -194,9 +195,12 @@ public:
 class UdpResponder : public ArpResponder {
 public:
 
-  UdpResponder(std::string target_ip, std::string target_mac) : ArpResponder::ArpResponder(target_ip, target_mac) {}
+  UdpResponder(std::string target_ip, std::string target_mac, int target_port) : target_port(target_port),
+    ArpResponder::ArpResponder(target_ip, target_mac) {}
 
   void response(pcpp::Packet parsed, int size, const std::string& dir) override {
+
+    std::cout << "udp occured!" << std::endl;
 
     pcpp::EthLayer* eth = parsed.getLayerOfType<pcpp::EthLayer>(); 
     pcpp::IPv4Layer* ipv4 = parsed.getLayerOfType<pcpp::IPv4Layer>();
@@ -207,11 +211,14 @@ public:
 
     pcpp::UdpLayer* udp = parsed.getLayerOfType<pcpp::UdpLayer>();
     if (udp == NULL) { return; }
+    if (udp->getDstPort() != target_port) { return; }
+
+    pcpp::PayloadLayer* payload = parsed.getLayerOfType<pcpp::PayloadLayer>();
 
     pcpp::EthLayer eth_response(eth->getDestMac(), eth->getSourceMac(), 0x0800);
     pcpp::IPv4Layer ipv4_response(ipv4->getDstIPv4Address(), ipv4->getSrcIPv4Address());
-    pcpp::udphdr* udp_header = udp->getUdpHeader();
-    pcpp::UdpLayer udp_response(udp_header->portDst, udp_header->portSrc);
+    pcpp::UdpLayer udp_response(udp->getDstPort(), udp->getSrcPort());
+    pcpp::PayloadLayer payload_response(payload->getPayload(), payload->getPayloadLen(), false);
 
     ipv4_response.getIPv4Header()->timeToLive = ipv4->getIPv4Header()->timeToLive;
 
@@ -219,7 +226,10 @@ public:
     parsed_response.addLayer(&eth_response, false);
     parsed_response.addLayer(&ipv4_response, false);
     parsed_response.addLayer(&udp_response, false);
+    parsed_response.addLayer(&payload_response, false);
     parsed_response.computeCalculateFields();
+
+    std::cout << parsed_response << std::endl;
 
     pcpp::RawPacket* raw_response = parsed_response.getRawPacket();
     const uint8_t* data = raw_response->getRawData();
@@ -233,6 +243,10 @@ public:
     }
 
   }
+
+private:
+
+  int target_port;
 
 };
 
@@ -248,8 +262,8 @@ int main(int argc, char* argv[]) {
 
   std::vector<Machine*> line;
   EndPoint left_end_point(left), right_end_point(right);
-  UdpResponder udp_responder("10.0.0.5", "86:7e:fa:6e:38:4a");
-  IcmpResponder icmp_responder("10.0.0.6", "86:7e:fa:6e:38:4b");
+  UdpResponder udp_responder("10.0.0.5", "86:7e:fa:6e:38:4a", 8080);
+  IcmpResponder icmp_responder("10.0.0.3", "86:7e:fa:6e:38:4b");
 
   line.push_back(&left_end_point);
   for (int i = 0; i < 3; i++) {
