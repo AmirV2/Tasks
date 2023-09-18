@@ -9,24 +9,29 @@
 #include <map>
 #include <cstdlib>
 
-#define PORT 8080
+const int PORT = 8080;
 
 class Encoder {
 public:
 
     Encoder() {
-        mutual_generated = false;
-        private_key = rand() % 10;
-        mutual_key = 1;
-    }
 
-    static int G;
-    static int P;
+        mutual_generated = false;
+
+        private_key = rand() % 100 + 1;
+        G = rand() % 100 + 1;
+        P = rand() % 100 + 1;
+
+        total_len = 0;
+        mutual_key = 1;
+
+    }
 
     void decode(char* buffer) {
         for (int i = 0; i < strlen(buffer); i++) {
             buffer[i] = char(buffer[i] - mutual_key);
         }
+        total_len += strlen(buffer);
     }
 
     int generate_secret_key() {
@@ -40,13 +45,22 @@ public:
 
     bool is_mutual_generated() { return mutual_generated; }
 
+    int get_G() { return G; }
+
+    int get_P() { return P; }
+
+    int get_total_len() { return total_len; }
+
 private:
 
+    int G;
+    int P;
     int private_key;
 
     int mutual_key;
-
     bool mutual_generated;
+
+    int total_len;
 
     int power(int a, int b) {
         int pow = 1;
@@ -57,8 +71,6 @@ private:
     }
 
 };
-int Encoder::G = 5;
-int Encoder::P = 7;
 
 class ClientHandler {
 public:
@@ -119,53 +131,39 @@ int main() {
 
         struct sockaddr_in client_address;
         socklen_t len = sizeof(client_address);
+        std::stringstream stream;
 
         int n = recvfrom(udp_socket, buffer, 1024, MSG_WAITALL,
             (struct sockaddr*)&client_address, &len);
         buffer[n] = '\0';
 
-        std::cout << "read" << std::endl;
-
         if (handler.client_exists({client_address.sin_port, client_address.sin_addr.s_addr})) {
 
-            std::cout << "first" << std::endl;
             Encoder* encoder = handler.get_encoder({client_address.sin_port, client_address.sin_addr.s_addr});
 
             if (!encoder->is_mutual_generated()) {
-
-                std::stringstream stream;
                 int secret_key;
-
                 stream << buffer;
                 stream >> secret_key;
-                std::cout << "response" << std::endl;
-
                 encoder->generate_mutual_key(secret_key);
-
             }
             else {
-                std::cout << "message" << std::endl;
-                std::cout << buffer << std::endl;
                 encoder->decode(buffer);
-                std::cout << buffer << std::endl;
+                std::cout <<  "message: "<< buffer << std::endl;
+                stream << encoder->get_total_len() << std::endl;
+                const char* response = stream.str().c_str();
+                sendto(udp_socket, response, strlen(response), MSG_CONFIRM,
+                    (struct sockaddr*)&client_address, len);
             }
 
         }
         else {
-
-            std::cout << "second" << std::endl;
-            Encoder*encoder = handler.add_client({client_address.sin_port, client_address.sin_addr.s_addr});
-
-            std::stringstream stream;
-            stream << Encoder::G << " " << Encoder::P << " "
+            Encoder* encoder = handler.add_client({client_address.sin_port, client_address.sin_addr.s_addr});
+            stream << encoder->get_G() << " " << encoder->get_P() << " "
                 << encoder->generate_secret_key() << std::endl;
-             std::cout << "response" << std::endl;
-
             const char* response = stream.str().c_str();
-
             sendto(udp_socket, response, strlen(response), MSG_CONFIRM,
                 (struct sockaddr*)&client_address, len);
-
         }
         
     }
