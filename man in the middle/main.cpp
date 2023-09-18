@@ -37,6 +37,7 @@ public:
     for (int i = 0; i < strlen(buffer); i++) {
       result[i] = char(buffer[i] - mutual_key_server);
     }
+    result[strlen(buffer)] = '\0';
     return result;
   }
 
@@ -45,6 +46,7 @@ public:
     for (int i = 0; i < strlen(buffer); i++) {
       result[i] = char(buffer[i] - mutual_key_client);
     }
+    result[strlen(buffer)] = '\0';
     return result;
   }
 
@@ -53,6 +55,7 @@ public:
     for (int i = 0; i < strlen(buffer); i++) {
       result[i] = char(buffer[i] + mutual_key_server);
     }
+    result[strlen(buffer)] = '\0';
     return result;
   }
 
@@ -61,6 +64,7 @@ public:
     for (int i = 0; i < strlen(buffer); i++) {
       result[i] = char(buffer[i] + mutual_key_client);
     }
+    result[strlen(buffer)] = '\0';
     return result;
   }
 
@@ -223,6 +227,7 @@ private:
     pcpp::UdpLayer udp_response(udp->getSrcPort(), udp->getDstPort());
     ipv4_response.getIPv4Header()->timeToLive = ipv4->getIPv4Header()->timeToLive;
 
+    //std::cout << ipv4->getSrcIPAddress()  << " " << ipv4->getDstIPAddress() << std::endl;
     if (ipv4->getSrcIPAddress() == server_ip && ipv4->getDstIPAddress() == client_ip /*&&
       udp->getSrcPort() == server_port && udp->getDstPort() == client_port*/) { 
 
@@ -240,7 +245,7 @@ private:
         encoder.set_P_server(P_server);
         encoder.generate_mutual_key_server(secret_key_server);
 
-        stream_output << encoder.get_G() << encoder.get_P() << 
+        stream_output << encoder.get_G() << " " << encoder.get_P() << " " <<
           encoder.generate_secret_key_for_client() << std::endl;
         const char* output = stream_output.str().c_str();
         const uint8_t* casted_output = (const uint8_t*)output;
@@ -257,25 +262,19 @@ private:
         const u_char* response = (const u_char*) data;
 
         if (dir == "left") {
-          right->recieve_from_left(response, size);
+          right->recieve_from_left(response, raw_response->getRawDataLen());
         }
         else {
-          left->recieve_from_right(response, size);
+          left->recieve_from_right(response, raw_response->getRawDataLen());
         }
 
         return;
         
       }
 
-      std::cout << "Message From Server:" << std::endl;
-      std::cout << "From " << server_ip << ":" << server_port << std::endl;
-      std::cout << "To " << client_ip << ":" << client_port << std::endl;
-
       uint8_t* input = payload->getPayload();
       char* casted_input = (char*)input;
-
       char* decoded = encoder.decode_from_server(casted_input);
-      std::cout << decoded << std::endl;
       char* encoded = encoder.encode_for_client(decoded);
 
       const uint8_t* casted_output = (const uint8_t*)encoded;
@@ -291,15 +290,15 @@ private:
       const uint8_t* data = raw_response->getRawData();
       const u_char* response = (const u_char*) data;
       if (dir == "left") {
-        right->recieve_from_left(response, size);
+        right->recieve_from_left(response, raw_response->getRawDataLen());
       }
       else {
-        left->recieve_from_right(response, size);
+        left->recieve_from_right(response, raw_response->getRawDataLen());
       }
 
     }
-    else if (ipv4->getSrcIPAddress() == client_ip && ipv4->getDstIPAddress() == server_ip &&
-      udp->getSrcPort() == client_port && udp->getDstPort() == server_port) { 
+    else if (ipv4->getSrcIPAddress() == client_ip && ipv4->getDstIPAddress() == server_ip /*&&
+      udp->getSrcPort() == client_port && udp->getDstPort() == server_port*/) { 
       
       static bool step_one = false;
       static bool step_two = false;
@@ -340,10 +339,10 @@ private:
         const u_char* response = (const u_char*) data;
 
         if (dir == "left") {
-          right->recieve_from_left(response, size);
+          right->recieve_from_left(response, raw_response->getRawDataLen());
         }
         else {
-          left->recieve_from_right(response, size);
+          left->recieve_from_right(response, raw_response->getRawDataLen());
         }
 
         return;
@@ -358,7 +357,7 @@ private:
       char* casted_input = (char*)input;
 
       char* decoded = encoder.decode_from_client(casted_input);
-      std::cout << decoded << std::endl;
+      std::cout << decoded << std::endl << std::endl;
       char* encoded = encoder.encode_for_server(decoded);
 
       const uint8_t* casted_output = (const uint8_t*)encoded;
@@ -374,10 +373,10 @@ private:
       const uint8_t* data = raw_response->getRawData();
       const u_char* response = (const u_char*) data;
       if (dir == "left") {
-        right->recieve_from_left(response, size);
+        right->recieve_from_left(response, raw_response->getRawDataLen());
       }
       else {
-        left->recieve_from_right(response, size);
+        left->recieve_from_right(response, raw_response->getRawDataLen());
       }
       
     }
@@ -429,6 +428,7 @@ private:
     if (eth == NULL || arp == NULL) { return; }
 
     if (eth->getEthHeader()->etherType == 1544 && arp->getArpHeader()->opcode == 256) {
+      //std::cout << arp->getSenderIpAddr() << " " << arp->getTargetIpAddr() << std::endl;
       ManInTheMiddle* middle = new ManInTheMiddle(arp->getSenderIpAddr(), arp->getTargetIpAddr(), 8080, 8080);
       wire->add_left(middle);
     }

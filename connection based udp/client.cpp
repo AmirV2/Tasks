@@ -27,6 +27,12 @@ public:
         }
     }
 
+    void decode(char* buffer) {
+        for (int i = 0; i < strlen(buffer); i++) {
+            buffer[i] = char(buffer[i] - mutual_key);
+        }
+    }
+
     int generate_secret_key() {
         return power(G, private_key);
     }
@@ -96,9 +102,10 @@ int main() {
     sendto(server_socket, response, strlen(response), MSG_CONFIRM,
         (struct sockaddr*)&server_addresss, len);
 
-    char message[1024] = "hello";
     int total_len_server = 0;
     while (true) {
+
+        char message[1024] = "hello";
 
         encoder.encode(message);
 
@@ -109,6 +116,7 @@ int main() {
             int n = recvfrom(server_socket, buffer, 1024, MSG_WAITALL,
                 (struct sockaddr*)&server_addresss, &len);
             buffer[n] = '\0';
+            encoder.decode(buffer);
             stream << buffer;
             stream >> total_len_server;
         }

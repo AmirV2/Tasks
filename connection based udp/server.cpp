@@ -27,6 +27,12 @@ public:
 
     }
 
+    void encode(char* buffer) {
+        for (int i = 0; i < strlen(buffer); i++) {
+            buffer[i] = char(buffer[i] + mutual_key);
+        }
+    }
+
     void decode(char* buffer) {
         for (int i = 0; i < strlen(buffer); i++) {
             buffer[i] = char(buffer[i] - mutual_key);
@@ -151,7 +157,8 @@ int main() {
                 encoder->decode(buffer);
                 std::cout <<  "message: "<< buffer << std::endl;
                 stream << encoder->get_total_len() << std::endl;
-                const char* response = stream.str().c_str();
+                char* response = (char*)stream.str().c_str();
+                encoder->encode(response);
                 sendto(udp_socket, response, strlen(response), MSG_CONFIRM,
                     (struct sockaddr*)&client_address, len);
             }
