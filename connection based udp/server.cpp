@@ -115,7 +115,7 @@ int main() {
     sockaddr_in server_addresss;
     server_addresss.sin_family = AF_INET;
     server_addresss.sin_port = htons(PORT);
-    server_addresss.sin_addr.s_addr = inet_addr("127.0.0.1");
+    server_addresss.sin_addr.s_addr = inet_addr("10.0.0.3");
 
     int bind_response = bind(udp_socket, (struct sockaddr*)&server_addresss,
         sizeof(server_addresss));

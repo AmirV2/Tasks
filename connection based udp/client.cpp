@@ -71,7 +71,7 @@ int main() {
     struct sockaddr_in server_addresss;
     server_addresss.sin_family = AF_INET;
     server_addresss.sin_port = htons(PORT);
-    server_addresss.sin_addr.s_addr = inet_addr("127.0.0.1");
+    server_addresss.sin_addr.s_addr = inet_addr("10.0.0.3");
 
     char buffer[1024] = {0};
     socklen_t len = sizeof(server_addresss);
@@ -96,11 +96,10 @@ int main() {
     sendto(server_socket, response, strlen(response), MSG_CONFIRM,
         (struct sockaddr*)&server_addresss, len);
 
-    char message[1024] = {0};
+    char message[1024] = "hello";
     int total_len_server = 0;
     while (true) {
 
-        std::cin >> message;
         encoder.encode(message);
 
         while (total_len_server < encoder.get_total_len()) {
